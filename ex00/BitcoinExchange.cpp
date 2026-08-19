@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   BitcoinExchange.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: fragarc2 <fragarc2@student.42.fr>          +#+  +:+       +#+        */
+/*   By: francisco <francisco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 10:48:34 by fragarc2          #+#    #+#             */
-/*   Updated: 2026/07/17 14:34:32 by fragarc2         ###   ########.fr       */
+/*   Updated: 2026/08/03 10:11:15 by francisco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,21 @@ void BitcoinExchange::fillMap()
 	}
 }
 
+bool isValidDateFormat(const std::string& date)
+{
+    if (date.size() != 10)
+        return false;
+    if (date[4] != '-' || date[7] != '-')
+        return false;
+    for (size_t i = 0; i < date.size(); i++)
+    {
+        if (i == 4 || i == 7)
+            continue;
+        if (date[i] < '0' || date[i] > '9')
+            return false;
+    }
+    return true;
+}
 
 double BitcoinExchange::findValidDate(std::string inputLine)
 {
@@ -56,18 +71,27 @@ double BitcoinExchange::findValidDate(std::string inputLine)
 	if (it != this->_Biter.end() && it->first == inputLine)
 		return static_cast<int>(it->second);
 	if(it == this->_Biter.begin())
-		return 0;
+		return -1;
 	it--;
 	return it->second;
 }
 
-int is_digit(std::string str)
+int is_digit(std::string& str)
 {
 	int i = 0;
+		
+	if (str[i] == ' ')
+		i++;
+	if (!str[i] || str[0] != ' ')
+		return 1;
 	while(str[i])
 	{
-		if (str[i] > 9 || str[i] < 0)
+		if ((str[i] > '9' || str[i] < '0') && (str[i] != '.'))
 			return 1;
+		if (str[i] == '.' && (str[i + 1] > '9' || str[i + 1] < '0'))
+			return 1;
+		if (str[i] == '.' && (str[i - 1] > '9' || str[i - 1] < '0'))
+		return 1;
 		i++;
 	}
 	return 0;
@@ -89,17 +113,22 @@ void BitcoinExchange::inputFinder()
 			continue;
 		}
 		size_t pos = inputLine.find('|');
-		if (pos == std::string::npos)
+		if (pos == std::string::npos || inputLine.find_first_of('.') != inputLine.find_last_of('.') || inputLine[pos + 1] != ' ' || inputLine[pos - 1] != ' ')
 		{
 			std::cout << "ERROR: invalid format" << std::endl;
 			continue;
 		}
-		std::string date = inputLine.substr(0, pos);
+		std::string date = inputLine.substr(0, pos - 1);
 		std::string value = inputLine.substr(pos + 1);
-
-		if(findValidDate(date) != 0)
+		
+		if (!isValidDateFormat(date))
 		{
-			if(is_digit(value) == 1)
+    		std::cout << "ERROR: invalid date" << std::endl;
+    		continue;
+		}
+		if(findValidDate(date) != -1)
+		{
+			if(is_digit(value) == 1 || atof(value.c_str()) > 1000)
 			{
 				std::cout << "ERROR: invalid amount" << std::endl;
 			}
