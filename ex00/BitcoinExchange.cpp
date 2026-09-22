@@ -6,7 +6,7 @@
 /*   By: francisco <francisco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 10:48:34 by fragarc2          #+#    #+#             */
-/*   Updated: 2026/08/03 10:11:15 by francisco        ###   ########.fr       */
+/*   Updated: 2026/09/02 12:54:20 by francisco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,31 +49,65 @@ void BitcoinExchange::fillMap()
 	}
 }
 
+bool isLeapYear(int year)
+{
+    return (year % 400 == 0)
+        || (year % 4 == 0 && year % 100 != 0);
+}
+
+
 bool isValidDateFormat(const std::string& date)
 {
     if (date.size() != 10)
         return false;
+
     if (date[4] != '-' || date[7] != '-')
         return false;
-    for (size_t i = 0; i < date.size(); i++)
+
+    for (size_t i = 0; i < date.size(); ++i)
     {
         if (i == 4 || i == 7)
             continue;
+
         if (date[i] < '0' || date[i] > '9')
             return false;
     }
+
+    int year = std::atoi(date.substr(0, 4).c_str());
+    int month = std::atoi(date.substr(5, 2).c_str());
+    int day = std::atoi(date.substr(8, 2).c_str());
+
+    if (month < 1 || month > 12)
+        return false;
+
+    int daysInMonth[] =
+    {
+        0, 31, 28, 31, 30, 31,
+        30, 31, 31, 30, 31, 30, 31
+    };
+
+    if (month == 2 && isLeapYear(year))
+        daysInMonth[2] = 29;
+
+    if (day < 1 || day > daysInMonth[month])
+        return false;
+
     return true;
 }
 
 double BitcoinExchange::findValidDate(std::string inputLine)
 {
-	std::map<std::string, double>::iterator it = this->_Biter.lower_bound(inputLine);
-	if (it != this->_Biter.end() && it->first == inputLine)
-		return static_cast<int>(it->second);
-	if(it == this->_Biter.begin())
-		return -1;
-	it--;
-	return it->second;
+    std::map<std::string, double>::iterator it =
+        this->_Biter.lower_bound(inputLine);
+
+    if (it != this->_Biter.end() && it->first == inputLine)
+        return it->second;
+
+    if (it == this->_Biter.begin())
+        return -1;
+
+    --it;
+    return it->second;
 }
 
 int is_digit(std::string& str)
