@@ -6,7 +6,7 @@
 /*   By: francisco <francisco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/06 14:54:31 by francisco         #+#    #+#             */
-/*   Updated: 2026/06/30 11:45:28 by francisco        ###   ########.fr       */
+/*   Updated: 2026/09/29 16:30:38 by francisco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@
 #include <limits>
 #include <ctime>
 #include <stdexcept>
+#include <climits>
+#include <iomanip>
 
 class PmergeMe
 {
@@ -32,7 +34,9 @@ private:
     void fillContainers(int ac, char **av);
     void printSequence(const std::string &label, const std::vector<int> &v) const;
     void printSequence(const std::string &label, const std::deque<int> &d) const;
-    void sortVector();
+    std::vector<int> sortjohnsonVector(std::vector<int> v);
+    std::deque<int> sortjohnsonDeque(std::deque<int> v);
+    void sortvec();
     void sortDeque();
 
 public:

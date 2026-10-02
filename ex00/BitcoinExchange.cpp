@@ -6,7 +6,7 @@
 /*   By: francisco <francisco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/20 10:48:34 by fragarc2          #+#    #+#             */
-/*   Updated: 2026/09/02 12:54:20 by francisco        ###   ########.fr       */
+/*   Updated: 2026/09/29 18:07:25 by francisco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,28 +25,34 @@ BitcoinExchange::BitcoinExchange(const BitcoinExchange &other)
 			*this = other;
 }
 
-BitcoinExchange& BitcoinExchange::operator=(BitcoinExchange const& a)
+BitcoinExchange& BitcoinExchange::operator=(const BitcoinExchange &other)
 {
-	if(this != &a)
-		*this = a;
+	if(this != &other)
+		this->_Biter = other._Biter;
 	return *this;
 }
 
-void BitcoinExchange::fillMap()
+bool BitcoinExchange::fillMap()
 {
 	std::ifstream file("data.csv");
+	if(!file.is_open())
+		return false;
 	std::string line;
-	std::string line2;
-	std::map<std::string, double>::iterator it = this->_Biter.begin();
-
-	while (std::getline(file, line, ','))
+	std::string line2;	
+	
+	if(std::getline(file, line, '\n'))
 	{
-		if (std::getline(file, line2, '\n'))
+		while (std::getline(file, line, ','))
 		{
-			this->_Biter[line] = std::atof(line2.c_str());
-			it++;
-		}
+			if (std::getline(file, line2, '\n'))
+			{
+				this->_Biter[line] = std::atof(line2.c_str());
+			}
+		}	
 	}
+	else
+		return false;
+	return true;	
 }
 
 bool isLeapYear(int year)
@@ -131,13 +137,52 @@ int is_digit(std::string& str)
 	return 0;
 }
 
-void BitcoinExchange::inputFinder()
+bool tooLarge(const std::string &input)
 {
-	std::ifstream file("input.txt");
+    std::string value = input;
+    if (!value.empty() && value[0] == ' ')
+        value.erase(0, 1);
+    size_t dot = value.find('.');
+    std::string intPart;
+    std::string decimalPart;
+    if (dot != std::string::npos)
+    {
+        intPart = value.substr(0, dot);
+        decimalPart = value.substr(dot + 1);
+    }
+	else
+		intPart = value;
+	if(intPart.size() > 4)
+		return true;
+    int intValue = std::atoi(intPart.c_str());
+    if (intValue > 1000)
+        return true;
+    if (intValue < 1000)
+        return false;
+    for (size_t i = 0; i < decimalPart.size(); i++)
+    {
+        if (decimalPart[i] != '0')
+            return true;
+    }
+    return false;
+}
+
+void BitcoinExchange::inputFinder(char *av)
+{
+	std::ifstream file(av);
+	if(!file.is_open())
+	{
+		std::cout << "ERROR: could not use file" << std::endl;
+			return ;
+	}
 	std::string inputLine;
-	std::string Line;
 	std::getline(file, inputLine, '\n');
 
+	if (inputLine != "date | value")
+	{
+		std::cout << "ERROR: invalid file header" << std::endl;
+			return ;
+	}
 
 	while (std::getline(file, inputLine))
 	{
@@ -147,7 +192,7 @@ void BitcoinExchange::inputFinder()
 			continue;
 		}
 		size_t pos = inputLine.find('|');
-		if (pos == std::string::npos || inputLine.find_first_of('.') != inputLine.find_last_of('.') || inputLine[pos + 1] != ' ' || inputLine[pos - 1] != ' ')
+		if (pos == std::string::npos || pos == 0 || inputLine.find_first_of('.') != inputLine.find_last_of('.') || inputLine[pos + 1] != ' ' || inputLine[pos - 1] != ' ')
 		{
 			std::cout << "ERROR: invalid format" << std::endl;
 			continue;
@@ -157,20 +202,20 @@ void BitcoinExchange::inputFinder()
 		
 		if (!isValidDateFormat(date))
 		{
-    		std::cout << "ERROR: invalid date" << std::endl;
+    		std::cout << "ERROR: invalid date format" << std::endl;
     		continue;
 		}
-		if(findValidDate(date) != -1)
+		double valid = findValidDate(date);
+		if(valid != -1)
 		{
-			if(is_digit(value) == 1 || atof(value.c_str()) > 1000)
+			if(is_digit(value) == 1 || tooLarge(value.c_str()))
 			{
 				std::cout << "ERROR: invalid amount" << std::endl;
 			}
 			else
-				std::cout << date << " =>" << value << " = " << (findValidDate(date) * atof(value.c_str())) << std::endl;
+				std::cout << date << " =>" << value << " = " << (valid * atof(value.c_str())) << std::endl;
 		}
 		else
 			std::cout << "ERROR: invalid date" << std::endl;
 	}
-
 }

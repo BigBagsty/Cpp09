@@ -28,15 +28,14 @@ class BitcoinExchange
 {
 	private:
 		std::map<std::string, double> _Biter;
-		std::map<std::string, double> _input;
 
 	public:
 		BitcoinExchange();
 		~BitcoinExchange();
-		BitcoinExchange(const BitcoinExchange &copy);
-		BitcoinExchange &operator=(BitcoinExchange const& a);
-		void fillMap();
-		void inputFinder();
+		BitcoinExchange(const BitcoinExchange &other);
+		BitcoinExchange &operator=(const BitcoinExchange &other);
+		bool fillMap();
+		void inputFinder(char *av);
 		double findValidDate(std::string inputLine);
 };
 

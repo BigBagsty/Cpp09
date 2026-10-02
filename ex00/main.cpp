@@ -12,10 +12,22 @@
 
 #include "BitcoinExchange.hpp"
 
-int main()
+int main(int ac, char **av)
 {
+	if(ac != 2)
+	{
+		std::cout << "Missing file" << std::endl;
+		return 1;
+	}
 	BitcoinExchange bitiner;
 
-	bitiner.fillMap();
-	bitiner.inputFinder();
+	if(bitiner.fillMap() == false)
+	{
+		std::cout << "ERROR: could not use file" << std::endl;
+		return 1;
+	}
+
+	bitiner.inputFinder(av[1]);
+
+	return 0;
 }

@@ -36,7 +36,7 @@ static size_t jacobsthal(size_t n)
         c = b + 2 * a;
         a = b;
         b = c;
-        ++i;
+        i++;
     }
     return b;
 }
@@ -64,14 +64,9 @@ static std::vector<size_t> buildInsertionOrder(size_t n)
             --idx;
         }
         prev = current;
-        ++k;
+        k++;
     }
     return order;
-}
-
-static bool pairsecondcompare(const std::pair<int, int> &a, const std::pair<int, int> &b)
-{
-    return a.second < b.second;
 }
 
 bool PmergeMe::parsePositiveInt(const std::string &s, int &out) const
@@ -79,7 +74,7 @@ bool PmergeMe::parsePositiveInt(const std::string &s, int &out) const
     long long n = 0;
     size_t i = 0;
 
-    if (s.empty())
+    if (s.empty() || s[0] == '0')
         return false;
     while (i < s.size())
     {
@@ -88,7 +83,7 @@ bool PmergeMe::parsePositiveInt(const std::string &s, int &out) const
         n = n * 10 + (s[i] - '0');
         if (n > std::numeric_limits<int>::max())
             return false;
-        ++i;
+        i++;
     }
     if (n <= 0)
         return false;
@@ -98,7 +93,7 @@ bool PmergeMe::parsePositiveInt(const std::string &s, int &out) const
 
 void PmergeMe::fillContainers(int ac, char **av) 
 {
-    for (int i = 1; i < ac; ++i) 
+    for (int i = 1; i < ac; i++) 
     {
         int value;
         if (!parsePositiveInt(av[i], value))
@@ -108,19 +103,18 @@ void PmergeMe::fillContainers(int ac, char **av)
     }
 }
 
-void PmergeMe::sortVector()
+std::vector<int> PmergeMe::sortjohnsonVector(std::vector<int> v)
 {
+    if (v.size() <= 1)
+        return v;
     std::vector<std::pair<int, int> > pairs;
-    std::vector<int> main;
-    std::vector<int> pending;
     size_t i = 0;
-
-    while (i < _vec.size())
+    while (i < v.size())
     {
-        int a = _vec[i++];
-        if (i < _vec.size())
+        int a = v[i++];
+        if (i < v.size())
         {
-            int b = _vec[i++];
+            int b = v[i++];
             if (a < b)
                 pairs.push_back(std::make_pair(a, b));
             else
@@ -129,18 +123,18 @@ void PmergeMe::sortVector()
         else
             pairs.push_back(std::make_pair(a, -1));
     }
-
-    std::sort(pairs.begin(), pairs.end(), pairsecondcompare);
-
-    for (size_t j = 0; j < pairs.size(); ++j)
+    std::vector<int> larger;
+    std::vector<int> pending;
+    for (size_t j = 0; j < pairs.size(); j++)
     {
         if (pairs[j].second != -1)
-            main.push_back(pairs[j].second);
+            larger.push_back(pairs[j].second);
         pending.push_back(pairs[j].first);
     }
-
+    larger = sortjohnsonVector(larger);
+    std::vector<int> main = larger;
     std::vector<size_t> order = buildInsertionOrder(pending.size());
-    for (size_t k = 0; k < order.size(); ++k)
+    for (size_t k = 0; k < order.size(); k++)
     {
         size_t idx = order[k];
         if (idx < pending.size())
@@ -150,23 +144,26 @@ void PmergeMe::sortVector()
             main.insert(pos, pending[idx]);
         }
     }
-
-    _vec = main;
+    return main;
 }
 
-void PmergeMe::sortDeque()
+void PmergeMe::sortvec()
 {
-    std::deque<std::pair<int, int> > pairs;
-    std::deque<int> main;
-    std::deque<int> pending;
-    size_t i = 0;
+    _vec = sortjohnsonVector(_vec);
+}
 
-    while (i < _deq.size())
+std::deque<int> PmergeMe::sortjohnsonDeque(std::deque<int> v)
+{
+    if (v.size() <= 1)
+        return v;
+    std::deque<std::pair<int, int> > pairs;
+    size_t i = 0;
+    while (i < v.size())
     {
-        int a = _deq[i++];
-        if (i < _deq.size())
+        int a = v[i++];
+        if (i < v.size())
         {
-            int b = _deq[i++];
+            int b = v[i++];
             if (a < b)
                 pairs.push_back(std::make_pair(a, b));
             else
@@ -175,35 +172,39 @@ void PmergeMe::sortDeque()
         else
             pairs.push_back(std::make_pair(a, -1));
     }
-
-    std::sort(pairs.begin(), pairs.end(), pairsecondcompare);
-
-    for (size_t j = 0; j < pairs.size(); ++j)
+    std::deque<int> larger;
+    std::deque<int> smaller;
+    for (size_t j = 0; j < pairs.size(); j++)
     {
         if (pairs[j].second != -1)
-            main.push_back(pairs[j].second);
-        pending.push_back(pairs[j].first);
+            larger.push_back(pairs[j].second);
+        smaller.push_back(pairs[j].first);
     }
-
-    std::vector<size_t> order = buildInsertionOrder(pending.size());
-    for (size_t k = 0; k < order.size(); ++k)
+    larger = sortjohnsonDeque(larger);
+    std::deque<int> main = larger;
+    std::vector<size_t> order = buildInsertionOrder(smaller.size());
+    for (size_t k = 0; k < order.size(); k++)
     {
         size_t idx = order[k];
-        if (idx < pending.size())
+        if (idx < smaller.size())
         {
             std::deque<int>::iterator pos =
-                std::lower_bound(main.begin(), main.end(), pending[idx]);
-            main.insert(pos, pending[idx]);
+                std::lower_bound(main.begin(), main.end(), smaller[idx]);
+            main.insert(pos, smaller[idx]);
         }
     }
+    return main;
+}
 
-    _deq = main;
+void PmergeMe::sortDeque()
+{
+    _deq = sortjohnsonDeque(_deq);
 }
 
 void PmergeMe::printSequence(const std::string &label, const std::vector<int> &v) const
 {
     std::cout << label;
-    for (size_t i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < v.size(); i++)
     {
         if (i)
             std::cout << ' ';
@@ -215,7 +216,7 @@ void PmergeMe::printSequence(const std::string &label, const std::vector<int> &v
 void PmergeMe::printSequence(const std::string &label, const std::deque<int> &d) const 
 {
     std::cout << label;
-    for (size_t i = 0; i < d.size(); ++i) 
+    for (size_t i = 0; i < d.size(); i++) 
     {
         if (i) std::cout << ' ';
         std::cout << d[i];
@@ -226,23 +227,18 @@ void PmergeMe::printSequence(const std::string &label, const std::deque<int> &d)
 void PmergeMe::run(int ac, char **av)
 {
     fillContainers(ac, av);
-    printSequence("Before: ", _vec);
+    printSequence("Before: ", _deq);
 
     std::clock_t startVec = std::clock();
-    sortVector();
+    sortvec();
     std::clock_t endVec = std::clock();
 
     std::clock_t startDeq = std::clock();
     sortDeque();
     std::clock_t endDeq = std::clock();
 
-    printSequence("After: ", _vec);
+    printSequence("After: ", _deq);
 
-    std::cout << "Time to process a range of " << _vec.size()
-              << " elements with std::vector : "
-              << (endVec - startVec) * 1000000.0 / CLOCKS_PER_SEC << " microseconds" << std::endl;
-
-    std::cout << "Time to process a range of " << _deq.size()
-              << " elements with std::deque : "
-              << (endDeq - startDeq) * 1000000.0 / CLOCKS_PER_SEC << " microseconds" << std::endl;
+    std::cout << "Time to process a range of " << ac - 1 << " elements with std::vector : " << std::fixed << std::setprecision(5) << static_cast<double>(endVec - startVec) / CLOCKS_PER_SEC<< " seconds." << std::endl;
+    std::cout << "Time to process a range of " << ac - 1 << " elements with std::deque : " << std::fixed << std::setprecision(5) << static_cast<double>(endDeq - startDeq) / CLOCKS_PER_SEC<< " seconds." << std::endl;
 }

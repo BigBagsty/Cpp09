@@ -6,7 +6,7 @@
 /*   By: francisco <francisco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/25 09:45:38 by francisco         #+#    #+#             */
-/*   Updated: 2026/08/03 12:17:54 by francisco        ###   ########.fr       */
+/*   Updated: 2026/09/29 18:12:52 by francisco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,15 +26,14 @@ class RPN
 {
 private:
     char *data;
-
     
 public:
     RPN();
     RPN(const RPN &other);
     ~RPN();
-    const RPN &operator=(const RPN &other);
+    RPN &operator=(const RPN &other);
     int parsing(char *math);
-    double mather(const char *input);
+    bool mather(const char *input, double &result);
     
 
 };
